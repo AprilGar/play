@@ -1,2 +1,2 @@
 # play
-First time using the Play framework alongside scala code 
+First project using the Play framework alongside scala code 
