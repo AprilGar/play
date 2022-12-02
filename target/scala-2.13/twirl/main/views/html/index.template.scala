@@ -24,14 +24,14 @@ object index extends _root_.play.twirl.api.BaseScalaTemplate[play.twirl.api.Html
 
 
 Seq[Any](format.raw/*2.1*/("""
-"""),_display_(/*3.2*/main("Play Scala API demo")/*3.29*/ {_display_(Seq[Any](format.raw/*3.31*/("""
+"""),_display_(/*3.2*/main("Play Scala API")/*3.24*/ {_display_(Seq[Any](format.raw/*3.26*/("""
 
 """),format.raw/*5.1*/("""<div class="container h-100 d-flex justify-content-center">
 
   <div class="jumbotron my-auto">
 
     <div class="container mb-5">
-      <h1 class="display-3 row">Play Scala API Demo</h1>
+      <h1 class="display-3 row">April's first play</h1>
     </div>
 
     <p class="lead">
@@ -121,10 +121,10 @@ Seq[Any](format.raw/*2.1*/("""
 
               /*
                   -- GENERATED --
-                  DATE: 2022-11-30T17:40:13.117
+                  DATE: 2022-12-01T16:25:37.085
                   SOURCE: /Users/april.garlington/Documents/AGA/Training/play-template/app/views/index.scala.html
-                  HASH: 5497a12eba0b5213723c306a69b4918019aed905
-                  MATRIX: 722->1|818->4|845->6|880->33|919->35|947->37|3096->2156
+                  HASH: 2135a79206cc3178b94ad49d24bcba55954f1a15
+                  MATRIX: 722->1|818->4|845->6|875->28|914->30|942->32|3090->2150
                   LINES: 21->1|26->2|27->3|27->3|27->3|29->5|107->83
                   -- GENERATED --
               */
