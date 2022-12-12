@@ -1,3 +1,8 @@
+[0m[[0m[33mwarn[0m] [0m[0m/Users/april.garlington/Documents/AGA/Training/play-template/app/repositories/DataRepository.scala:41:31: Auto-application to `()` is deprecated. Supply the empty argument list `()` explicitly to invoke method headOption,[0m
+[0m[[0m[33mwarn[0m] [0m[0mor remove the empty argument list from its definition (Java-defined methods are exempt).[0m
+[0m[[0m[33mwarn[0m] [0m[0mIn Scala 3, an unapplied method like this will be eta-expanded into a function.[0m
+[0m[[0m[33mwarn[0m] [0m[0m    collection.find(byID(id)).headOption flatMap {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                              ^[0m
 [0m[[0m[33mwarn[0m] [0m[0m/Users/april.garlington/Documents/AGA/Training/play-template/conf/routes:1:1: Auto-application to `()` is deprecated. Supply the empty argument list `()` explicitly to invoke method index,[0m
 [0m[[0m[33mwarn[0m] [0m[0mor remove the empty argument list from its definition (Java-defined methods are exempt).[0m
 [0m[[0m[33mwarn[0m] [0m[0mIn Scala 3, an unapplied method like this will be eta-expanded into a function.[0m
@@ -14,4 +19,8 @@
 [0m[[0m[33mwarn[0m] [0m[0mor remove the empty argument list from its definition (Java-defined methods are exempt).[0m
 [0m[[0m[33mwarn[0m] [0m[0mIn Scala 3, an unapplied method like this will be eta-expanded into a function.[0m
 [0m[[0m[33mwarn[0m] [0m[0mPOST     /create     controllers.ApplicationController.create[0m
-[0m[[0m[33mwarn[0m] [0m[0mfour warnings found[0m
+[0m[[0m[33mwarn[0m] [0m[0m/Users/april.garlington/Documents/AGA/Training/play-template/app/repositories/DataRepository.scala:41:50: match may not be exhaustive.[0m
+[0m[[0m[33mwarn[0m] [0m[0mIt would fail on the following input: None[0m
+[0m[[0m[33mwarn[0m] [0m[0m    collection.find(byID(id)).headOption flatMap {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                 ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m6 warnings found[0m
