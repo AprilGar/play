@@ -2,7 +2,7 @@ package controllers
 
 import akka.protobufv3.internal.Service
 import connectors.LibraryConnector
-import models.DataModel
+import models.{APIError, DataModel}
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, BaseController, ControllerComponents, Request}
 import repositories.repositories.DataRepository
@@ -46,9 +46,16 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
       .map(_ => Accepted)
   }
 
+//  def getGoogleBook(search: String, term: String): Action[AnyContent] = Action.async { implicit request =>
+//    service.getGoogleBook(search = search, term = term).map {
+//      book => Ok(Json.toJson(book))
+//    }
+//  }
+
   def getGoogleBook(search: String, term: String): Action[AnyContent] = Action.async { implicit request =>
-    service.getGoogleBook(search = search, term = term).map {
-      book => Ok(Json.toJson(book))
+    service.getGoogleBook(search = search, term = term).value.map {
+      case Right(book) => Ok(Json.toJson(book))
+      case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
     }
   }
 
