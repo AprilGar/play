@@ -2,14 +2,14 @@ package models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class Items(id: String, volumeInfo: VolumeInfo, pageCount: Int)
+case class Item(id: String, volumeInfo: VolumeInfo, pageCount: Int)
 
 case class VolumeInfo(title: String, description: String)
 
-case class Book(items: List[Items])
+case class Book(items: List[Item])
 
-object Items {
-  implicit val formats: OFormat[Items] = Json.format[Items]
+object Item {
+  implicit val formats: OFormat[Item] = Json.format[Item]
 }
 
 object VolumeInfo {

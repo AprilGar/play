@@ -14,10 +14,15 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class ApplicationController @Inject()(val controllerComponents: ControllerComponents, val dataRepository: DataRepository, implicit val ec: ExecutionContext, val service: LibraryService) extends BaseController {
 
-  def index(): Action[AnyContent] = Action.async { implicit request =>
-    val books: Future[Seq[DataModel]] = dataRepository.collection.find().toFuture()
-    books.map(items => Json.toJson(items)).map(result => Ok(result))
+  def index(): Action[AnyContent] = Action.async { request =>
+    dataRepository.index().map{
+      case Right(item: Seq[DataModel]) => Ok {
+        Json.toJson(item)
+      }
+      case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
+    }
   }
+
 
   def create(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     request.body.validate[DataModel] match {
