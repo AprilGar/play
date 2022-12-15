@@ -1,6 +1,5 @@
 package controllers
 
-import akka.http.scaladsl.model.HttpHeader.ParsingResult.Ok
 import akka.util.ByteString
 import baseSpec.BaseSpecWithApplication
 import models.DataModel
@@ -15,9 +14,7 @@ import scala.concurrent.Future
 
 class ApplicationControllerSpec extends BaseSpecWithApplication {
 
-  val TestApplicationController = new ApplicationController(
-    component, repository, executionContext
-  )
+  val TestApplicationController = new ApplicationController(component, repository, executionContext, service)
 
   private val dataModel: DataModel = DataModel(
     "abcd",
@@ -31,6 +28,13 @@ class ApplicationControllerSpec extends BaseSpecWithApplication {
     "test name2",
     "test description",
     100
+  )
+
+  private val googleBookResponse: DataModel = DataModel(
+    "n3OwneMiBPgC",
+    "The Umbrella Conspiracy",
+    "When a remote mountain community is suddenly beset by a rash of grisly murders, the Special Tactics and Rescue Squad--a paramilitary unit--is dispatched to investigate",
+    293
   )
 
   override def beforeEach(): Unit = repository.deleteAll()
@@ -120,5 +124,20 @@ class ApplicationControllerSpec extends BaseSpecWithApplication {
       afterEach()
     }
   }
+
+  "ApplicationController .getGoogleBook()" should {
+    "get a book using search and term" in {
+      beforeEach()
+
+      val requestToGoogle = buildGet("/library/google/n3OwneMiBPgC/umbrella")
+      val resultFromGoogle = TestApplicationController.getGoogleBook("n3OwneMiBPgC", "umbrella")(requestToGoogle)
+
+      status(resultFromGoogle) shouldBe Status.OK
+      contentAsJson(resultFromGoogle) shouldBe Json.toJson(googleBookResponse)
+
+      afterEach()
+    }
+  }
+
 
 }

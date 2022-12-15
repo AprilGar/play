@@ -14,7 +14,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class ApplicationController @Inject()(val controllerComponents: ControllerComponents, val dataRepository: DataRepository, implicit val ec: ExecutionContext, val service: LibraryService) extends BaseController {
 
-  def index(): Action[AnyContent] = Action.async { request =>
+  def index(): Action[AnyContent] = Action.async { implicit request =>
     dataRepository.index().map{
       case Right(item: Seq[DataModel]) => Ok {
         Json.toJson(item)
@@ -50,12 +50,6 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
     dataRepository.delete(id)
       .map(_ => Accepted)
   }
-
-//  def getGoogleBook(search: String, term: String): Action[AnyContent] = Action.async { implicit request =>
-//    service.getGoogleBook(search = search, term = term).map {
-//      book => Ok(Json.toJson(book))
-//    }
-//  }
 
   def getGoogleBook(search: String, term: String): Action[AnyContent] = Action.async { implicit request =>
     service.getGoogleBook(search = search, term = term).value.map {
