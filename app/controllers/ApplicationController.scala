@@ -36,6 +36,13 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
     }
   }
 
+  def readByName(name: String): Action[AnyContent] = Action.async { implicit request =>
+    dataRepository.findByName(name).map {
+      case Right(book) => Ok(Json.toJson(book))
+      case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
+    }
+  }
+
   def update(id: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
       request.body.validate[DataModel]
       match {
@@ -54,13 +61,6 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
 
   def getGoogleBook(search: String, term: String): Action[AnyContent] = Action.async { implicit request =>
     service.getGoogleBook(search = search, term = term).value.map {
-      case Right(book) => Ok(Json.toJson(book))
-      case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
-    }
-  }
-
-  def readByName(name: String): Action[AnyContent] = Action.async { implicit request =>
-    dataRepository.findByName(name).map  {
       case Right(book) => Ok(Json.toJson(book))
       case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
     }

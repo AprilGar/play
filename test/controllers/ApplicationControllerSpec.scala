@@ -80,7 +80,21 @@ class ApplicationControllerSpec extends BaseSpecWithApplication {
       contentAsJson(readResult).as[DataModel] shouldBe dataModel
       afterEach()
     }
+  }
 
+  "ApplicationController .readByName()" should {
+    "find a book in the database using the name" in {
+      beforeEach()
+      val request: FakeRequest[JsValue] = buildPost("/create").withBody[JsValue](Json.toJson(dataModel))
+      val createdResult: Future[Result] = TestApplicationController.create()(request)
+      status(createdResult) shouldBe Status.CREATED
+
+      val readNameRequest: FakeRequest[AnyContent] = buildGet("/read/abcd")
+      val readNameResult: Future[Result] = TestApplicationController.readByName("test name")(readNameRequest)
+      status(readNameResult) shouldBe Status.OK
+      contentAsJson(readNameResult).as[DataModel] shouldBe dataModel
+      afterEach()
+    }
   }
 
   "ApplicationController .update()" should {
@@ -136,6 +150,5 @@ class ApplicationControllerSpec extends BaseSpecWithApplication {
       afterEach()
     }
   }
-
 
 }
