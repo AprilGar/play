@@ -7,7 +7,7 @@ import play.api.test.FakeRequest
 import play.api.http.Status
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.streams.Accumulator
-import play.api.mvc.{AnyContent, Result}
+import play.api.mvc.{AnyContent, AnyContentAsEmpty, Result}
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status}
 
 import scala.concurrent.Future
@@ -70,19 +70,17 @@ class ApplicationControllerSpec extends BaseSpecWithApplication {
   "ApplicationController .read()" should {
     "find a book in the database by id" in {
       beforeEach()
-
       val request: FakeRequest[JsValue] = buildPost("/create").withBody[JsValue](Json.toJson(dataModel))
       val createdResult: Future[Result] = TestApplicationController.create()(request)
       status(createdResult) shouldBe Status.CREATED
-
 
       val readRequest: FakeRequest[AnyContent] = buildGet("/read/abcd")
       val readResult: Future[Result] = TestApplicationController.read("abcd")(readRequest)
       status(readResult) shouldBe Status.OK
       contentAsJson(readResult).as[DataModel] shouldBe dataModel
-
       afterEach()
     }
+
   }
 
   "ApplicationController .update()" should {
@@ -117,8 +115,8 @@ class ApplicationControllerSpec extends BaseSpecWithApplication {
       val createdResult: Future[Result] = TestApplicationController.create()(request)
       status(createdResult) shouldBe Status.CREATED
 
-      val deleteRequest: FakeRequest[JsValue] = buildDelete("abcd").withBody[JsValue](Json.toJson(dataModel))
-      val deleteResponse: Accumulator[ByteString, Result] = TestApplicationController.delete("abcd")(deleteRequest)
+      val deleteRequest: FakeRequest[AnyContentAsEmpty.type] = buildDelete("delete/abcd")
+      val deleteResponse: Future[Result] = TestApplicationController.delete("abcd")(deleteRequest)
       status(deleteResponse) shouldBe Status.ACCEPTED
 
       afterEach()

@@ -2,9 +2,9 @@ package models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class Item(id: String, volumeInfo: VolumeInfo, pageCount: Int)
+case class Item(id: String, volumeInfo: VolumeInfo)
 
-case class VolumeInfo(title: String, description: String)
+case class VolumeInfo(title: String, description: String, pageCount: Int)
 
 case class Book(items: List[Item])
 

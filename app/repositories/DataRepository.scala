@@ -2,10 +2,10 @@ package repositories
 
 package repositories
 
-import models.{APIError, DataModel}
+import models.{APIError, Book, DataModel}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.empty
-import org.mongodb.scala.model._
+import org.mongodb.scala.model.{Filters, _}
 import org.mongodb.scala.result
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
@@ -29,39 +29,59 @@ class DataRepository @Inject()(
   def index(): Future[Either[APIError.BadAPIResponse, Seq[DataModel]]] = {
     collection.find().toFuture().map {
       case books: Seq[DataModel] => Right(books)
-      case _ => Left(APIError.BadAPIResponse(415, "Books cannot be found"))
+      case _ => Left(APIError.BadAPIResponse(404, "Books cannot be found"))
     }
   }
 
-  def create(book: DataModel): Future[DataModel] =
-    collection
-      .insertOne(book)
-      .toFuture()
-      .map(_ => book)
+  def create(book: DataModel): Future[Either[APIError, DataModel]] =
+    collection.insertOne(book).toFutureOption()
+      .map{
+      case Some(result) if result.wasAcknowledged() => Right(book)
+      case _ => Left(APIError.BadAPIResponse(424, "Books cannot be created"))
+    }
 
   private def byID(id: String): Bson =
     Filters.and(
       Filters.equal("_id", id)
     )
 
-  def read(id: String): Future[DataModel] =
+  def read(id: String): Future[Either[APIError, DataModel]] =
     collection.find(byID(id)).headOption flatMap {
-      case Some(data) =>
-        Future(data)
+      case Some(data) => Future(Right(data))
+      case _ => Future(Left(APIError.BadAPIResponse(400, "Books cannot be read")))
     }
 
-  def update(id: String, book: DataModel): Future[result.UpdateResult] =
-    collection.replaceOne(
+  def update(id: String, book: DataModel): Future[Either[APIError.BadAPIResponse, DataModel]] =
+    collection.replaceOne (
       filter = byID(id),
       replacement = book,
       options = new ReplaceOptions().upsert(true)
-    ).toFuture()
+    ).toFutureOption() map{
+      case Some(result) if result.wasAcknowledged() => Right(book)
+      case _ => Left(APIError.BadAPIResponse(401, "Books cannot be updated"))
+    }
 
-  def delete(id: String): Future[result.DeleteResult] =
+  def delete(id: String): Future[Either[APIError, String]] =
     collection.deleteOne(
       filter = byID(id)
-    ).toFuture()
+    ).toFutureOption().map{
+      case Some(result) if result.wasAcknowledged() => Right("book deleted")
+      case _ => Left(APIError.BadAPIResponse(400, "Books cannot be deleted"))
+    }
 
-  def deleteAll(): Future[Unit] = collection.deleteMany(empty()).toFuture().map(_ => ()) //Hint: needed for tests
+  def deleteAll(): Future[Unit] =
+    collection.deleteMany(empty()).toFuture().map(_ => ())
+
+  def filterByName(name: String): Bson = {
+    Filters.and(
+      Filters.equal("name", name))
+  }
+
+  def findByName(name: String): Future[Either[APIError.BadAPIResponse, Option[DataModel]]] = {
+    collection.find(filterByName(name)).headOption flatMap {
+      case (correctName) => Future(Right(correctName))
+      case (_) => Future(Left(APIError.BadAPIResponse(404, "Book cannot be found")))
+    }
+  }
 
 }

@@ -16,9 +16,7 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
 
   def index(): Action[AnyContent] = Action.async { implicit request =>
     dataRepository.index().map{
-      case Right(item: Seq[DataModel]) => Ok {
-        Json.toJson(item)
-      }
+      case Right(item: Seq[DataModel]) => Ok {Json.toJson(item)}
       case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
     }
   }
@@ -26,15 +24,16 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
 
   def create(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     request.body.validate[DataModel] match {
-      case JsSuccess(dataModel, _) =>
-        dataRepository.create(dataModel).map(_ => Created)
+      case JsSuccess(dataModel, _) => dataRepository.create(dataModel).map(_ => Created)
       case JsError(_) => Future(BadRequest)
     }
   }
 
   def read(id: String): Action[AnyContent] = Action.async { implicit request =>
-    dataRepository.read(id)
-      .map(book => Ok(Json.toJson(book)))
+    dataRepository.read(id).map{
+      case Right(book) => Ok(Json.toJson(book))
+      case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
+    }
   }
 
   def update(id: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
@@ -47,12 +46,21 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
 }
 
   def delete(id: String): Action[AnyContent] = Action.async { implicit request =>
-    dataRepository.delete(id)
-      .map(_ => Accepted)
+    dataRepository.delete(id).map{
+      case Right(deletedBook: String) => Accepted
+      case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
+    }
   }
 
   def getGoogleBook(search: String, term: String): Action[AnyContent] = Action.async { implicit request =>
     service.getGoogleBook(search = search, term = term).value.map {
+      case Right(book) => Ok(Json.toJson(book))
+      case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
+    }
+  }
+
+  def readByName(name: String): Action[AnyContent] = Action.async { implicit request =>
+    dataRepository.findByName(name).map  {
       case Right(book) => Ok(Json.toJson(book))
       case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
     }
