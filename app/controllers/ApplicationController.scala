@@ -1,20 +1,69 @@
 package controllers
 
-import play.api.mvc.{BaseController, ControllerComponents}
+import akka.protobufv3.internal.Service
+import connectors.LibraryConnector
+import models.{APIError, DataModel}
+import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
+import play.api.mvc.{Action, AnyContent, BaseController, ControllerComponents, Request}
+import repositories.repositories.DataRepository
+import service.LibraryService
 
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ApplicationController @Inject()(val controllerComponents: ControllerComponents) extends BaseController {
+class ApplicationController @Inject()(val controllerComponents: ControllerComponents, val dataRepository: DataRepository, implicit val ec: ExecutionContext, val service: LibraryService) extends BaseController {
 
-  def index() = TODO
+  def index(): Action[AnyContent] = Action.async { implicit request =>
+    dataRepository.index().map{
+      case Right(item: Seq[DataModel]) => Ok {Json.toJson(item)}
+      case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
+    }
+  }
 
-  def create() = TODO
 
-  def read(id: String) = TODO
+  def create(): Action[JsValue] = Action.async(parse.json) { implicit request =>
+    request.body.validate[DataModel] match {
+      case JsSuccess(dataModel, _) => dataRepository.create(dataModel).map(_ => Created)
+      case JsError(_) => Future(BadRequest)
+    }
+  }
 
-  def update(id: String) = TODO
+  def read(id: String): Action[AnyContent] = Action.async { implicit request =>
+    dataRepository.read(id).map{
+      case Right(book) => Ok(Json.toJson(book))
+      case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
+    }
+  }
 
-  def delete(id: String) = TODO
+  def readByName(name: String): Action[AnyContent] = Action.async { implicit request =>
+    dataRepository.findByName(name).map {
+      case Right(book) => Ok(Json.toJson(book))
+      case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
+    }
+  }
+
+  def update(id: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
+      request.body.validate[DataModel]
+      match {
+        case JsSuccess(dataModel, _) =>
+          dataRepository.update(id, dataModel).map(updatedBook => Accepted)
+        case JsError(_) => Future(BadRequest)
+      }
+}
+
+  def delete(id: String): Action[AnyContent] = Action.async { implicit request =>
+    dataRepository.delete(id).map{
+      case Right(deletedBook: String) => Accepted
+      case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
+    }
+  }
+
+  def getGoogleBook(search: String, term: String): Action[AnyContent] = Action.async { implicit request =>
+    service.getGoogleBook(search = search, term = term).value.map {
+      case Right(book) => Ok(Json.toJson(book))
+      case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
+    }
+  }
 
 }
