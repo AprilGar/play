@@ -2,6 +2,7 @@ package repositories
 
 package repositories
 
+import com.google.inject.ImplementedBy
 import models.{APIError, Book, DataModel}
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.empty
@@ -12,6 +13,16 @@ import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+
+@ImplementedBy(classOf[DataRepository])
+trait DataRepoTrait {
+  def index(): Future[Either[APIError.BadAPIResponse, Seq[DataModel]]]
+  def create(book: DataModel): Future[Either[APIError, DataModel]]
+  def read(id: String): Future[Either[APIError, DataModel]]
+  def update(id: String, book: DataModel): Future[Either[APIError.BadAPIResponse, DataModel]]
+  def delete(id: String): Future[Either[APIError, String]]
+  def findByName(name: String): Future[Either[APIError.BadAPIResponse, Option[DataModel]]]
+}
 
 @Singleton
 class DataRepository @Inject()(
@@ -24,7 +35,7 @@ class DataRepository @Inject()(
     Indexes.ascending("_id")
   )),
   replaceIndexes = false
-) {
+) with DataRepoTrait {
 
   def index(): Future[Either[APIError.BadAPIResponse, Seq[DataModel]]] = {
     collection.find().toFuture().map {
@@ -85,3 +96,4 @@ class DataRepository @Inject()(
   }
 
 }
+

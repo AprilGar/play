@@ -62,7 +62,7 @@ class ApplicationControllerSpec extends BaseSpecWithApplication {
       beforeEach()
       val request: FakeRequest[JsValue] = buildPost("/create").withBody[JsValue](Json.obj())
       val createdResult = TestApplicationController.create()(request)
-      status(createdResult) shouldBe Status.BAD_REQUEST
+      status(createdResult) shouldBe Status.INTERNAL_SERVER_ERROR
       afterEach()
     }
   }
@@ -115,7 +115,7 @@ class ApplicationControllerSpec extends BaseSpecWithApplication {
       beforeEach()
       val request: FakeRequest[JsValue] = buildPost("/create").withBody[JsValue](Json.obj())
       val createdResult = TestApplicationController.create()(request)
-      status(createdResult) shouldBe Status.BAD_REQUEST
+      status(createdResult) shouldBe Status.INTERNAL_SERVER_ERROR
       afterEach()
     }
 

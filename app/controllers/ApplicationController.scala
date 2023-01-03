@@ -5,14 +5,14 @@ import connectors.LibraryConnector
 import models.{APIError, DataModel}
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, BaseController, ControllerComponents, Request}
-import repositories.repositories.DataRepository
+import repositories.repositories.{DataRepoTrait, DataRepository}
 import service.LibraryService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ApplicationController @Inject()(val controllerComponents: ControllerComponents, val dataRepository: DataRepository, implicit val ec: ExecutionContext, val service: LibraryService) extends BaseController {
+class ApplicationController @Inject()(val controllerComponents: ControllerComponents, val dataRepository: DataRepoTrait, implicit val ec: ExecutionContext, val service: LibraryService) extends BaseController {
 
   def index(): Action[AnyContent] = Action.async { implicit request =>
     dataRepository.index().map{
@@ -25,7 +25,7 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
   def create(): Action[JsValue] = Action.async(parse.json) { implicit request =>
     request.body.validate[DataModel] match {
       case JsSuccess(dataModel, _) => dataRepository.create(dataModel).map(_ => Created)
-      case JsError(_) => Future(BadRequest)
+      case JsError(_) => Future(InternalServerError)
     }
   }
 
