@@ -21,7 +21,7 @@ trait DataRepoTrait {
   def read(id: String): Future[Either[APIError, DataModel]]
   def update(id: String, book: DataModel): Future[Either[APIError.BadAPIResponse, DataModel]]
   def delete(id: String): Future[Either[APIError, String]]
-  def findByName(name: String): Future[Either[APIError.BadAPIResponse, Option[DataModel]]]
+  def findByName(name: String): Future[Either[APIError.BadAPIResponse, DataModel]]
 }
 
 @Singleton
@@ -73,10 +73,8 @@ class DataRepository @Inject()(
     }
 
   def delete(id: String): Future[Either[APIError, String]] =
-    collection.deleteOne(
-      filter = byID(id)
-    ).toFutureOption().map{
-      case Some(result) if result.wasAcknowledged() => Right("book deleted")
+    collection.deleteOne(filter = byID(id)).toFutureOption().map{
+      case Some(result) if result.getDeletedCount == 1 => Right("book deleted")
       case _ => Left(APIError.BadAPIResponse(400, "Books cannot be deleted"))
     }
 
@@ -88,10 +86,10 @@ class DataRepository @Inject()(
       Filters.equal("name", name))
   }
 
-  def findByName(name: String): Future[Either[APIError.BadAPIResponse, Option[DataModel]]] = {
+  def findByName(name: String): Future[Either[APIError.BadAPIResponse, DataModel]] = {
     collection.find(filterByName(name)).headOption flatMap {
-      case (correctName) => Future(Right(correctName))
-      case (_) => Future(Left(APIError.BadAPIResponse(404, "Book cannot be found")))
+      case Some(correctName) => Future(Right(correctName))
+      case None => Future(Left(APIError.BadAPIResponse(404, "Book cannot be found")))
     }
   }
 

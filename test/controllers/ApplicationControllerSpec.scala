@@ -80,6 +80,14 @@ class ApplicationControllerSpec extends BaseSpecWithApplication {
       contentAsJson(readResult).as[DataModel] shouldBe dataModel
       afterEach()
     }
+
+    "throw an error if id cannot be found" in {
+      beforeEach()
+      val readRequest: FakeRequest[AnyContent] = buildGet("/read/abcd")
+      val readResult: Future[Result] = TestApplicationController.read("abcd")(readRequest)
+      status(readResult) shouldBe Status.INTERNAL_SERVER_ERROR
+      afterEach()
+    }
   }
 
   "ApplicationController .readByName()" should {
@@ -93,6 +101,14 @@ class ApplicationControllerSpec extends BaseSpecWithApplication {
       val readNameResult: Future[Result] = TestApplicationController.readByName("test name")(readNameRequest)
       status(readNameResult) shouldBe Status.OK
       contentAsJson(readNameResult).as[DataModel] shouldBe dataModel
+      afterEach()
+    }
+
+    "will throw an error if cannot find book using the name" in {
+      beforeEach()
+      val readNameRequest: FakeRequest[AnyContent] = buildGet("/read/abc")
+      val readNameResult: Future[Result] = TestApplicationController.readByName("")(readNameRequest)
+      status(readNameResult) shouldBe Status.INTERNAL_SERVER_ERROR
       afterEach()
     }
   }
@@ -135,6 +151,12 @@ class ApplicationControllerSpec extends BaseSpecWithApplication {
 
       afterEach()
     }
+
+    "not delete a book if id cannot be found" in {
+      val deleteRequest: FakeRequest[AnyContentAsEmpty.type] = buildDelete("delete/abc")
+      val deleteResponse: Future[Result] = TestApplicationController.delete("abc")(deleteRequest)
+      status(deleteResponse) shouldBe Status.INTERNAL_SERVER_ERROR
+    }
   }
 
   "ApplicationController .getGoogleBook()" should {
@@ -147,6 +169,14 @@ class ApplicationControllerSpec extends BaseSpecWithApplication {
       status(resultFromGoogle) shouldBe Status.OK
       contentAsJson(resultFromGoogle) shouldBe Json.toJson(googleBookResponse)
 
+      afterEach()
+    }
+
+    "should not get a book using search and term if they don't match url" in {
+      beforeEach()
+      val requestToGoogle = buildGet("/library/google/n3OwneMiBPgC/umbrella")
+      val resultFromGoogle = TestApplicationController.getGoogleBook("n3OwneM", "monkey")(requestToGoogle)
+      status(resultFromGoogle) shouldBe Status.INTERNAL_SERVER_ERROR
       afterEach()
     }
   }

@@ -68,4 +68,8 @@ class ApplicationControllerUnitSpec extends BaseSpecWithApplication with MockFac
     }
   }
 
+  "ApplicationController .read()" should {
+
+  }
+
 }
