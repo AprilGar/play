@@ -69,7 +69,7 @@ class DataRepository @Inject()(
       options = new ReplaceOptions().upsert(true)
     ).toFutureOption() map{
       case Some(result) if result.wasAcknowledged() => Right(book)
-      case _ => Left(APIError.BadAPIResponse(401, "Books cannot be updated"))
+      case _ => Left(APIError.BadAPIResponse(400, "Books cannot be updated"))
     }
 
   def delete(id: String): Future[Either[APIError, String]] =

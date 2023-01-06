@@ -129,9 +129,9 @@ class ApplicationControllerSpec extends BaseSpecWithApplication {
 
     "give an bad request error if it cannot update a book" in {
       beforeEach()
-      val request: FakeRequest[JsValue] = buildPost("/create").withBody[JsValue](Json.obj())
-      val createdResult = TestApplicationController.create()(request)
-      status(createdResult) shouldBe Status.INTERNAL_SERVER_ERROR
+      val updateRequest: FakeRequest[JsValue] = buildPut("/update/abcd").withBody[JsValue](Json.obj())
+      val updateResult: Future[Result] = TestApplicationController.update("abcd")(updateRequest)
+      status(updateResult) shouldBe Status.BAD_REQUEST
       afterEach()
     }
 
