@@ -5,6 +5,7 @@ import connectors.LibraryConnector
 import models.{APIError, DataModel}
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, AnyContent, BaseController, ControllerComponents, Request}
+import play.filters.csrf.CSRF
 import repositories.repositories.{DataRepoTrait, DataRepository}
 import service.LibraryService
 
@@ -12,7 +13,8 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ApplicationController @Inject()(val controllerComponents: ControllerComponents, val dataRepository: DataRepoTrait, implicit val ec: ExecutionContext, val service: LibraryService) extends BaseController {
+class ApplicationController @Inject()(val controllerComponents: ControllerComponents, val dataRepository: DataRepoTrait, implicit val ec: ExecutionContext, val service: LibraryService)
+  extends BaseController with play.api.i18n.I18nSupport {
 
   def index(): Action[AnyContent] = Action.async { implicit request =>
     dataRepository.index().map{
@@ -64,6 +66,43 @@ class ApplicationController @Inject()(val controllerComponents: ControllerCompon
       case Right(book) => Ok(Json.toJson(book))
       case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
     }
+  }
+
+  def findBook(search: String, term: String): Action[AnyContent] = Action.async { implicit request =>
+    service.getGoogleBook(search = search, term = term).value.map {
+      case Right(book) => Ok(views.html.findBook(book))
+      case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
+    }
+  }
+
+  def findBookFromDB(name: String): Action[AnyContent] = Action.async { implicit request =>
+    dataRepository.findByName(name = name).map {
+      case Right(book: DataModel) => Ok(views.html.findBook(book))
+      case Left(error) => Status(error.httpResponseStatus)(Json.toJson(error.reason))
+    }
+  }
+
+  def accessToken(implicit request: Request[_]) = {
+    CSRF.getToken
+  }
+
+  def addBook: Action[AnyContent] = Action { implicit request =>
+    Ok(views.html.addBook(DataModel.bookForm))
+  }
+
+  def addBookForm(): Action[AnyContent] = Action.async { implicit request =>
+    accessToken
+    DataModel.bookForm.bindFromRequest().fold(
+      formWithErrors => {
+        Future(BadRequest(formWithErrors.toString))
+      },
+      formData => {
+        dataRepository.create(formData).map{
+          case Right(book) => Redirect(routes.ApplicationController.findBookFromDB(book.name))
+          case  Left(error) => (BadRequest(error.toString))
+        }
+      }
+    )
   }
 
 }

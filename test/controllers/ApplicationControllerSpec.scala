@@ -3,12 +3,15 @@ package controllers
 import akka.util.ByteString
 import baseSpec.BaseSpecWithApplication
 import models.DataModel
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import play.api.test.FakeRequest
 import play.api.http.Status
+import play.api.http.Status.OK
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.streams.Accumulator
 import play.api.mvc.{AnyContent, AnyContentAsEmpty, Result}
-import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status}
+import play.api.test.CSRFTokenHelper.CSRFFRequestHeader
+import play.api.test.Helpers.{GET, contentAsJson, contentAsString, contentType, defaultAwaitTimeout, route, status, writeableOf_AnyContentAsEmpty}
 
 import scala.concurrent.Future
 
@@ -177,6 +180,78 @@ class ApplicationControllerSpec extends BaseSpecWithApplication {
       val requestToGoogle = buildGet("/library/google/n3OwneMiBPgC/umbrella")
       val resultFromGoogle = TestApplicationController.getGoogleBook("n3OwneM", "monkey")(requestToGoogle)
       status(resultFromGoogle) shouldBe Status.INTERNAL_SERVER_ERROR
+      afterEach()
+    }
+  }
+
+  "ApplicationController .findBookFromDB()" should {
+    "find a book in the DB using the name" in {
+      beforeEach()
+      val request: FakeRequest[JsValue] = buildPost("/create").withBody[JsValue](Json.toJson(dataModel))
+      val createdResult: Future[Result] = TestApplicationController.create()(request)
+      status(createdResult) shouldBe Status.CREATED
+
+      val dbRequest = buildGet("/findBookFromDB/testname")
+      val dbResult = TestApplicationController.findBookFromDB("test name")(dbRequest)
+      status(dbResult) shouldBe Status.OK
+      contentType(dbResult) mustBe Some("text/html")
+      contentAsString(dbResult) must include("test name")
+      afterEach()
+    }
+
+    "will not find a book in the DB if there isn't one by that name" in {
+      beforeEach()
+      val request: FakeRequest[JsValue] = buildPost("/create").withBody[JsValue](Json.toJson(dataModel))
+      val createdResult: Future[Result] = TestApplicationController.create()(request)
+      status(createdResult) shouldBe Status.CREATED
+
+      val dbRequest = buildGet("/findBookFromDB/test%20name")
+      val dbResult = TestApplicationController.findBookFromDB("name")(dbRequest)
+      status(dbResult) shouldBe Status.INTERNAL_SERVER_ERROR
+      afterEach()
+    }
+
+    "render the findBook page from the router" in {
+      beforeEach()
+      val createRequest: FakeRequest[JsValue] = buildPost("/create").withBody[JsValue](Json.toJson(dataModel))
+      val createdResult: Future[Result] = TestApplicationController.create()(createRequest)
+      status(createdResult) shouldBe Status.CREATED
+
+      val request = FakeRequest(GET, "/findBookFromDB/test%20name")
+      val findBook = route(app, request).get
+      status(findBook) mustBe OK
+      afterEach()
+    }
+  }
+
+  "ApplicationController .addBook()" should {
+    "add a book to the DB using the form" in {
+      beforeEach()
+      val request = buildGet("/addBook")
+      val result = TestApplicationController.addBook()(request)
+      status(result) shouldBe Status.OK
+      afterEach()
+    }
+  }
+
+  "ApplicationController .addBookForm()" should {
+    "input form data into DB" in {
+      beforeEach()
+      val request = buildPost("/addBook/form").withFormUrlEncodedBody(
+        "id" -> "1",
+        "name" -> "name",
+        "description" -> "description",
+        "numSales" -> "3").withCSRFToken
+      val result = TestApplicationController.addBookForm()(request)
+      contentAsString(result) must include("name")
+      afterEach()
+    }
+
+    "will not display book if not in DB" in {
+      beforeEach()
+      val request = buildPost("/addBook/form")
+      val result = TestApplicationController.addBookForm()(request)
+      status(result) shouldBe Status.BAD_REQUEST
       afterEach()
     }
   }
